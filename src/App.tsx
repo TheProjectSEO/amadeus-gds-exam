@@ -82,29 +82,29 @@ function LandingPage({ onSelectMode }: { onSelectMode: (mode: AppMode) => void }
       </div>
 
       {/* Mode Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl w-full px-2 sm:px-0">
         <button
           onClick={() => onSelectMode('practice')}
-          className="cursor-pointer group relative p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-green-500/50 hover:bg-slate-800/80 transition-all duration-200"
+          className="cursor-pointer group relative p-5 sm:p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-green-500/50 hover:bg-slate-800/80 active:bg-slate-800/80 transition-all duration-200"
         >
-          <div className="w-10 h-10 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center mb-4">
+          <div className="w-10 h-10 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center mb-3 sm:mb-4">
             <BookOpen className="w-5 h-5 text-green-400" />
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">Practice Mode</h3>
           <p className="text-sm text-slate-400">Practice freely with instant feedback. No timer, unlimited retries.</p>
-          <div className="mt-4 text-xs text-green-400 font-medium">100 Questions • All Sections</div>
+          <div className="mt-3 sm:mt-4 text-xs text-green-400 font-medium">100 Questions • All Sections</div>
         </button>
 
         <button
           onClick={() => onSelectMode('exam-setup')}
-          className="cursor-pointer group relative p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all duration-200"
+          className="cursor-pointer group relative p-5 sm:p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-blue-500/50 hover:bg-slate-800/80 active:bg-slate-800/80 transition-all duration-200"
         >
-          <div className="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mb-4">
+          <div className="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mb-3 sm:mb-4">
             <Clock className="w-5 h-5 text-blue-400" />
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">Exam Mode</h3>
           <p className="text-sm text-slate-400">Timed exam, randomized questions. Score shown after submission.</p>
-          <div className="mt-4 text-xs text-blue-400 font-medium">120 Minutes • 1 Point Each</div>
+          <div className="mt-3 sm:mt-4 text-xs text-blue-400 font-medium">120 Minutes • 1 Point Each</div>
         </button>
       </div>
 
@@ -189,14 +189,14 @@ function ExamSetup({ onStart }: { onStart: (name: string, section: string) => vo
 
 function TerminalDisplay({ text }: { text: string }) {
   return (
-    <div className="my-3 rounded-lg border border-slate-700/50 overflow-x-auto" style={{ background: '#0D1117' }}>
+    <div className="my-3 rounded-lg border border-slate-700/50 overflow-x-auto max-w-full" style={{ background: '#0D1117' }}>
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-700/30">
-        <div className="w-2.5 h-2.5 rounded-full bg-red-500/60"></div>
-        <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60"></div>
-        <div className="w-2.5 h-2.5 rounded-full bg-green-500/60"></div>
+        <div className="w-2.5 h-2.5 rounded-full bg-red-500/60 shrink-0"></div>
+        <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60 shrink-0"></div>
+        <div className="w-2.5 h-2.5 rounded-full bg-green-500/60 shrink-0"></div>
         <span className="ml-2 text-[10px] text-slate-500 font-mono">AMADEUS</span>
       </div>
-      <pre className="p-4 text-sm leading-relaxed" style={{ fontFamily: "'Fira Code', monospace", color: '#4ADE80', whiteSpace: 'pre', fontSize: '13px' }}>
+      <pre className="p-3 sm:p-4 text-xs sm:text-sm leading-relaxed" style={{ fontFamily: "'Fira Code', monospace", color: '#4ADE80', whiteSpace: 'pre', overflowX: 'auto' }}>
         {text}
       </pre>
     </div>
@@ -256,7 +256,7 @@ function QuestionCard({
       {/* Answer input */}
       <div className="mt-4">
         <label className="block text-xs text-slate-400 mb-1.5 uppercase tracking-wider font-medium">Your Answer</label>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             ref={inputRef}
             type="text"
@@ -266,7 +266,7 @@ function QuestionCard({
             onPaste={isPasteBlocked ? e => e.preventDefault() : undefined}
             maxLength={100}
             placeholder="Type your command here..."
-            className="flex-1 px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors text-sm"
+            className="flex-1 min-w-0 px-3 sm:px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors text-sm"
             style={{ fontFamily: "'Fira Code', monospace" }}
             autoComplete="off"
             spellCheck={false}
@@ -274,7 +274,7 @@ function QuestionCard({
           {!isExam && (
             <button
               onClick={onCheck}
-              className="cursor-pointer px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors shrink-0"
+              className="cursor-pointer px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 active:bg-blue-400 text-white text-sm font-medium transition-colors shrink-0"
             >
               Check
             </button>
@@ -402,7 +402,7 @@ function Sidebar({
                       <button
                         key={q.id}
                         onClick={() => { onSelectQuestion(qIdx); onClose(); }}
-                        className={`cursor-pointer w-6 h-6 rounded text-[10px] font-mono border transition-colors flex items-center justify-center ${dotColor} ${isActive ? 'text-white' : 'text-slate-300 hover:border-blue-400/50'}`}
+                        className={`cursor-pointer w-7 h-7 sm:w-6 sm:h-6 rounded text-[11px] sm:text-[10px] font-mono border transition-colors flex items-center justify-center ${dotColor} ${isActive ? 'text-white' : 'text-slate-300 hover:border-blue-400/50'}`}
                       >
                         {q.id}
                       </button>
@@ -486,24 +486,26 @@ function ResultsScreen({
 
           {/* Section Breakdown */}
           <h3 className="text-sm font-semibold text-slate-300 mb-3">Section Breakdown</h3>
-          <div className="space-y-2">
+          <div className="space-y-3 sm:space-y-2">
             {SECTIONS.map(section => {
               const score = sectionScores[section.id];
               if (!score) return null;
               const pct = (score.correct / score.total) * 100;
               return (
-                <div key={section.id} className="flex items-center gap-3">
-                  <span className="text-xs text-slate-400 w-36 truncate">{section.label}</span>
-                  <div className="flex-1 h-2 rounded-full bg-slate-700 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${pct}%`,
-                        backgroundColor: pct >= 75 ? '#22C55E' : pct >= 50 ? '#F59E0B' : '#EF4444',
-                      }}
-                    />
+                <div key={section.id} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="text-xs text-slate-400 sm:w-36 sm:truncate">{section.label}</span>
+                  <div className="flex items-center gap-2 sm:flex-1">
+                    <div className="flex-1 h-2 rounded-full bg-slate-700 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: pct >= 75 ? '#22C55E' : pct >= 50 ? '#F59E0B' : '#EF4444',
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-slate-300 font-mono w-12 text-right">{score.correct}/{score.total}</span>
                   </div>
-                  <span className="text-xs text-slate-300 font-mono w-12 text-right">{score.correct}/{score.total}</span>
                 </div>
               );
             })}
@@ -779,7 +781,7 @@ export default function App() {
               </button>
               <div className="flex items-center gap-2">
                 <Plane className="w-4 h-4 text-blue-400" />
-                <span className="text-sm font-semibold text-white hidden sm:inline">
+                <span className="text-xs sm:text-sm font-semibold text-white">
                   {isExam ? 'Exam Mode' : 'Practice Mode'}
                 </span>
               </div>
@@ -854,12 +856,12 @@ export default function App() {
         </div>
 
         {/* Bottom nav */}
-        <nav className="sticky bottom-0 bg-slate-900/90 backdrop-blur-sm border-t border-slate-700/50 px-4 py-3 no-print">
+        <nav className="sticky bottom-0 bg-slate-900/90 backdrop-blur-sm border-t border-slate-700/50 px-4 py-3 no-print" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-3xl mx-auto flex items-center justify-between">
             <button
               onClick={goPrev}
               disabled={currentIdx === 0}
-              className="cursor-pointer flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800 disabled:text-slate-600 disabled:hover:bg-transparent transition-colors"
+              className="cursor-pointer flex items-center gap-1 px-4 py-2.5 sm:px-3 sm:py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800 active:bg-slate-800 disabled:text-slate-600 disabled:hover:bg-transparent transition-colors"
             >
               <ChevronLeft className="w-4 h-4" /> Prev
             </button>
@@ -869,7 +871,7 @@ export default function App() {
             <button
               onClick={goNext}
               disabled={currentIdx === questions.length - 1}
-              className="cursor-pointer flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800 disabled:text-slate-600 disabled:hover:bg-transparent transition-colors"
+              className="cursor-pointer flex items-center gap-1 px-4 py-2.5 sm:px-3 sm:py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800 active:bg-slate-800 disabled:text-slate-600 disabled:hover:bg-transparent transition-colors"
             >
               Next <ChevronRight className="w-4 h-4" />
             </button>
