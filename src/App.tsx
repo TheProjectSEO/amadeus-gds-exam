@@ -842,10 +842,14 @@ export default function App() {
         });
         if (result.alreadySubmitted) {
           setSubmitError('You have already submitted this exam.');
+          setMode('submitted');
         } else if (!result.success) {
           setSubmitError(result.error || 'Submission failed. Please contact your teacher.');
+          setMode('submitted');
+        } else {
+          // Show results immediately after successful submission
+          setMode('results');
         }
-        setMode('submitted');
       } catch {
         setSubmitError('Network error. Your answers have been saved locally. Please contact your teacher.');
         setMode('submitted');
