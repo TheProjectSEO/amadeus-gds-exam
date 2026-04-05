@@ -2,13 +2,17 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plane, BookOpen, Clock, ChevronLeft, ChevronRight, Check, X,
   Menu, XIcon, AlertTriangle, Printer, RotateCcw, Monitor, MonitorOff,
-  Eye, EyeOff
+  Eye, EyeOff, LogOut
 } from 'lucide-react';
 import { QUESTIONS, SECTIONS, decodeAnswer, type Question, type Section } from './data/questions';
+import { initGoogleSignIn, signOut as googleSignOut, type GoogleUser } from './lib/auth';
+import { GOOGLE_CLIENT_ID, submitExam as apiSubmitExam, checkResults as apiCheckResults } from './lib/api';
+import { LoginScreen } from './components/LoginScreen';
+import { TeacherDashboard } from './components/TeacherDashboard';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
-type AppMode = 'landing' | 'practice' | 'exam-setup' | 'exam' | 'results';
+type AppMode = 'landing' | 'practice' | 'exam-setup' | 'exam' | 'results' | 'login' | 'submitted' | 'teacher';
 
 interface Answers {
   [questionId: number]: string;
@@ -32,6 +36,49 @@ function shuffleArray<T>(array: T[]): T[] {
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
+}
+
+// Seeded PRNG (mulberry32) for deterministic per-student question selection
+function mulberry32(seed: number): () => number {
+  return () => {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function stringToSeed(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+function seededSelect<T>(array: T[], count: number, seedStr: string): T[] {
+  const rng = mulberry32(stringToSeed(seedStr));
+  const pool = [...array];
+  const selected: T[] = [];
+  for (let i = 0; i < Math.min(count, pool.length); i++) {
+    const j = i + Math.floor(rng() * (pool.length - i));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+    selected.push(pool[i]);
+  }
+  return selected;
+}
+
+// Session recovery keys
+const SESSION_KEY = 'amadeus_exam_session';
+
+interface SavedSession {
+  userSub: string;
+  answers: Answers;
+  timeLeft: number;
+  questionIds: number[];
+  studentName: string;
+  studentSection: string;
 }
 
 function checkAnswer(input: string, encoded: string): boolean {
@@ -62,7 +109,7 @@ function getSectionIcon(sectionId: string) {
 
 // ─── Landing Page ────────────────────────────────────────────────────
 
-function LandingPage({ onSelectMode }: { onSelectMode: (mode: AppMode) => void }) {
+function LandingPage({ onSelectMode, user, onSignOut }: { onSelectMode: (mode: AppMode) => void; user: GoogleUser | null; onSignOut: () => void }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
       {/* Header */}
@@ -92,11 +139,11 @@ function LandingPage({ onSelectMode }: { onSelectMode: (mode: AppMode) => void }
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">Practice Mode</h3>
           <p className="text-sm text-slate-400">Practice freely with instant feedback. No timer, unlimited retries.</p>
-          <div className="mt-3 sm:mt-4 text-xs text-green-400 font-medium">100 Questions • All Sections</div>
+          <div className="mt-3 sm:mt-4 text-xs text-green-400 font-medium">200 Questions • All Sections</div>
         </button>
 
         <button
-          onClick={() => onSelectMode('exam-setup')}
+          onClick={() => onSelectMode(user ? 'exam-setup' : 'login')}
           className="cursor-pointer group relative p-5 sm:p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-blue-500/50 hover:bg-slate-800/80 active:bg-slate-800/80 transition-all duration-200"
         >
           <div className="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mb-3 sm:mb-4">
@@ -104,12 +151,20 @@ function LandingPage({ onSelectMode }: { onSelectMode: (mode: AppMode) => void }
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">Exam Mode</h3>
           <p className="text-sm text-slate-400">Timed exam, randomized questions. Score shown after submission.</p>
-          <div className="mt-3 sm:mt-4 text-xs text-blue-400 font-medium">120 Minutes • 1 Point Each</div>
+          <div className="mt-3 sm:mt-4 text-xs text-blue-400 font-medium">100 Questions • 120 Minutes • Sign-in Required</div>
         </button>
       </div>
 
-      {/* Instructions */}
-      <div className="mt-10 max-w-xl text-center">
+      {/* User status + Instructions */}
+      <div className="mt-10 max-w-xl text-center space-y-3">
+        {user && (
+          <div className="flex items-center justify-center gap-3 text-sm">
+            <span className="text-slate-400">Signed in as <span className="text-white">{user.email}</span></span>
+            <button onClick={onSignOut} className="cursor-pointer text-slate-500 hover:text-white transition-colors">
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         <p className="text-xs text-slate-500">
           Answers are case-sensitive, space-sensitive, and punctuation-sensitive. Type commands exactly as taught.
         </p>
@@ -120,8 +175,8 @@ function LandingPage({ onSelectMode }: { onSelectMode: (mode: AppMode) => void }
 
 // ─── Exam Setup ──────────────────────────────────────────────────────
 
-function ExamSetup({ onStart }: { onStart: (name: string, section: string) => void }) {
-  const [name, setName] = useState('');
+function ExamSetup({ onStart, user }: { onStart: (name: string, section: string) => void; user: GoogleUser | null }) {
+  const [name, setName] = useState(user?.name || '');
   const [section, setSection] = useState('');
 
   return (
@@ -145,6 +200,14 @@ function ExamSetup({ onStart }: { onStart: (name: string, section: string) => vo
               style={{ fontFamily: "'Fira Code', monospace" }}
             />
           </div>
+          {user && (
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
+              <div className="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 text-sm">
+                {user.email}
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">Section / Student Number *</label>
             <input
@@ -163,8 +226,8 @@ function ExamSetup({ onStart }: { onStart: (name: string, section: string) => vo
             <div className="text-xs text-amber-300">
               <p className="font-medium mb-1">Before you start:</p>
               <ul className="space-y-1 text-amber-300/80">
-                <li>• You have 120 minutes to complete 100 questions</li>
-                <li>• Questions are randomized</li>
+                <li>• You will receive 100 questions selected from a pool of 200</li>
+                <li>• Questions are unique to you — no two students get the same set</li>
                 <li>• You cannot see if your answer is correct during the exam</li>
                 <li>• The exam auto-submits when time runs out</li>
                 <li>• Closing the browser will lose all progress</li>
@@ -593,6 +656,13 @@ export default function App() {
   const [feedback, setFeedback] = useState<FeedbackState>({});
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Auth state
+  const [user, setUser] = useState<GoogleUser | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [examResult, setExamResult] = useState<{ released: boolean; totalCorrect?: number; totalQuestions?: number; scorePercent?: number } | null>(null);
+  const [checkingResults, setCheckingResults] = useState(false);
+
   // Exam state
   const [studentName, setStudentName] = useState('');
   const [studentSection, setStudentSection] = useState('');
@@ -601,6 +671,64 @@ export default function App() {
   const [tabSwitches, setTabSwitches] = useState(0);
   const [showTabWarning, setShowTabWarning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Initialize Google Sign-In
+  useEffect(() => {
+    const checkGIS = setInterval(() => {
+      if (window.google) {
+        clearInterval(checkGIS);
+        initGoogleSignIn(GOOGLE_CLIENT_ID, (googleUser) => {
+          setUser(googleUser);
+          // If user was on login screen, proceed to exam setup
+          setMode(prev => prev === 'login' ? 'exam-setup' : prev);
+        });
+      }
+    }, 100);
+    return () => clearInterval(checkGIS);
+  }, []);
+
+  // Session recovery — save every 30s during exam
+  useEffect(() => {
+    if (!examStarted || !user) return;
+    const interval = setInterval(() => {
+      const session: SavedSession = {
+        userSub: user.sub,
+        answers,
+        timeLeft,
+        questionIds: questions.map(q => q.id),
+        studentName,
+        studentSection,
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [examStarted, user, answers, timeLeft, questions, studentName, studentSection]);
+
+  // Check for saved session on mount
+  useEffect(() => {
+    if (!user) return;
+    const saved = localStorage.getItem(SESSION_KEY);
+    if (!saved) return;
+    try {
+      const session: SavedSession = JSON.parse(saved);
+      if (session.userSub !== user.sub) return;
+      if (confirm('You have an unfinished exam. Would you like to resume?')) {
+        const restoredQuestions = session.questionIds
+          .map(id => QUESTIONS.find(q => q.id === id))
+          .filter((q): q is Question => q !== undefined);
+        setQuestions(restoredQuestions);
+        setAnswers(session.answers);
+        setTimeLeft(session.timeLeft);
+        setStudentName(session.studentName);
+        setStudentSection(session.studentSection);
+        setCurrentIdx(0);
+        setExamStarted(true);
+        setMode('exam');
+      } else {
+        localStorage.removeItem(SESSION_KEY);
+      }
+    } catch { /* invalid session data */ }
+  }, [user]);
 
   const currentQuestion = questions[currentIdx];
   const isExam = mode === 'exam';
@@ -671,25 +799,64 @@ export default function App() {
   const handleStartExam = useCallback((name: string, section: string) => {
     setStudentName(name);
     setStudentSection(section);
-    setQuestions(shuffleArray(QUESTIONS));
+    // Seeded selection: pick 100 questions from 200, unique per student
+    const examQuestions = user
+      ? seededSelect(QUESTIONS, 100, user.sub)
+      : shuffleArray(QUESTIONS).slice(0, 100);
+    setQuestions(examQuestions);
     setCurrentIdx(0);
     setAnswers({});
     setFeedback({});
     setTimeLeft(120 * 60);
     setTabSwitches(0);
     setExamStarted(true);
+    setSubmitError(null);
     setMode('exam');
 
     // Request fullscreen
     try { document.documentElement.requestFullscreen?.(); } catch { /* ok */ }
-  }, []);
+  }, [user]);
 
-  const handleSubmitExam = useCallback(() => {
+  const handleSubmitExam = useCallback(async () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setExamStarted(false);
     try { document.exitFullscreen?.(); } catch { /* ok */ }
-    setMode('results');
-  }, []);
+
+    // Clear saved session
+    localStorage.removeItem(SESSION_KEY);
+
+    // If user is logged in, submit to Apps Script
+    if (user) {
+      setSubmitting(true);
+      setSubmitError(null);
+      try {
+        const result = await apiSubmitExam({
+          idToken: user.credential,
+          studentName,
+          studentEmail: user.email,
+          studentSection,
+          answers,
+          questionOrder: questions.map(q => q.id),
+          questionsAttempted: Object.values(answers).filter(a => a.trim()).length,
+          timeTakenSeconds: 120 * 60 - timeLeft,
+        });
+        if (result.alreadySubmitted) {
+          setSubmitError('You have already submitted this exam.');
+        } else if (!result.success) {
+          setSubmitError(result.error || 'Submission failed. Please contact your teacher.');
+        }
+        setMode('submitted');
+      } catch {
+        setSubmitError('Network error. Your answers have been saved locally. Please contact your teacher.');
+        setMode('submitted');
+      } finally {
+        setSubmitting(false);
+      }
+    } else {
+      // Fallback: show results directly (no backend configured)
+      setMode('results');
+    }
+  }, [user, studentName, studentSection, answers, questions, timeLeft]);
 
   const handleConfirmSubmit = useCallback(() => {
     const unanswered = questions.filter(q => !answers[q.id]?.trim()).length;
@@ -733,9 +900,84 @@ export default function App() {
     return () => document.removeEventListener('keydown', handler);
   }, [goNext, goPrev]);
 
+  // ── Check Results handler ──
+  const handleCheckResults = useCallback(async () => {
+    if (!user) return;
+    setCheckingResults(true);
+    try {
+      const result = await apiCheckResults(user.credential);
+      setExamResult(result);
+    } catch {
+      // silently fail
+    } finally {
+      setCheckingResults(false);
+    }
+  }, [user]);
+
+  const handleSignOut = useCallback(() => {
+    if (user) googleSignOut(user.email);
+    setUser(null);
+    setMode('landing');
+  }, [user]);
+
   // ── Render ──
-  if (mode === 'landing') return <LandingPage onSelectMode={handleSelectMode} />;
-  if (mode === 'exam-setup') return <ExamSetup onStart={handleStartExam} />;
+  if (mode === 'landing') return <LandingPage onSelectMode={handleSelectMode} user={user} onSignOut={handleSignOut} />;
+  if (mode === 'login') return <LoginScreen onBack={() => setMode('landing')} />;
+  if (mode === 'teacher' && user) return <TeacherDashboard user={user} onBack={() => setMode('landing')} />;
+  if (mode === 'exam-setup') return <ExamSetup onStart={handleStartExam} user={user} />;
+
+  if (mode === 'submitted') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
+        <div className="w-full max-w-md text-center">
+          <div className="w-16 h-16 rounded-2xl bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
+            <Check className="w-8 h-8 text-green-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Exam Submitted!</h2>
+          {submitError ? (
+            <p className="text-red-400 text-sm mb-6">{submitError}</p>
+          ) : (
+            <p className="text-slate-400 text-sm mb-6">
+              Your answers have been recorded. Results will be available when released by your teacher.
+            </p>
+          )}
+
+          {/* Check results */}
+          {examResult?.released ? (
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 mb-6">
+              <p className="text-sm text-slate-400 mb-2">Your Score</p>
+              <div className="text-4xl font-bold font-mono" style={{
+                color: (examResult.scorePercent || 0) >= 75 ? '#22C55E' : (examResult.scorePercent || 0) >= 50 ? '#F59E0B' : '#EF4444'
+              }}>
+                {examResult.totalCorrect}/{examResult.totalQuestions}
+              </div>
+              <div className="text-lg text-slate-400 mt-1">{examResult.scorePercent?.toFixed(1)}%</div>
+            </div>
+          ) : (
+            <button
+              onClick={handleCheckResults}
+              disabled={checkingResults}
+              className="cursor-pointer mb-6 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium transition-colors"
+            >
+              {checkingResults ? 'Checking...' : 'Check if Results are Released'}
+            </button>
+          )}
+
+          {examResult && !examResult.released && (
+            <p className="text-amber-400 text-xs mb-6">Results have not been released yet. Please check back later.</p>
+          )}
+
+          <button
+            onClick={() => { setMode('landing'); setExamStarted(false); setExamResult(null); }}
+            className="cursor-pointer text-sm text-slate-400 hover:text-white transition-colors"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (mode === 'results') {
     return (
       <ResultsScreen
@@ -745,6 +987,17 @@ export default function App() {
         studentSection={studentSection}
         onRestart={() => { setMode('landing'); setExamStarted(false); }}
       />
+    );
+  }
+
+  // Submitting overlay
+  if (submitting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mb-4" />
+        <p className="text-white text-lg">Submitting your exam...</p>
+        <p className="text-slate-400 text-sm mt-2">Please do not close this page.</p>
+      </div>
     );
   }
 

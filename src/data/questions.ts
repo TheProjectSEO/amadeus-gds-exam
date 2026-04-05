@@ -24,14 +24,14 @@ export function decodeAnswer(encoded: string): string {
 }
 
 export const SECTIONS: Section[] = [
-  { id: 'encode_decode', label: 'Encoding & Decoding', range: [1, 20] },
-  { id: 'time_difference', label: 'Time Difference', range: [21, 30] },
-  { id: 'availability', label: 'Air Availability', range: [31, 80] },
-  { id: 'pnr_name', label: 'PNR - Name Element', range: [81, 85] },
-  { id: 'pnr_itinerary', label: 'PNR - Itinerary', range: [86, 94] },
-  { id: 'pnr_contact', label: 'PNR - Contact', range: [95, 96] },
-  { id: 'pnr_ticketing', label: 'PNR - Ticketing', range: [97, 98] },
-  { id: 'pnr_received', label: 'PNR - Received From', range: [99, 100] },
+  { id: 'encode_decode', label: 'Encoding & Decoding', range: [1, 120] },
+  { id: 'time_difference', label: 'Time Difference', range: [21, 130] },
+  { id: 'availability', label: 'Air Availability', range: [31, 180] },
+  { id: 'pnr_name', label: 'PNR - Name Element', range: [81, 185] },
+  { id: 'pnr_itinerary', label: 'PNR - Itinerary', range: [86, 194] },
+  { id: 'pnr_contact', label: 'PNR - Contact', range: [95, 196] },
+  { id: 'pnr_ticketing', label: 'PNR - Ticketing', range: [97, 198] },
+  { id: 'pnr_received', label: 'PNR - Received From', range: [99, 200] },
 ];
 
 // Availability displays for SS questions (86-94)
@@ -167,12 +167,21 @@ const rawQuestions: [number, string, string, string, string][] = [
   [100, 'pnr_received', 'PNR - Received From', 'Booking received from MARIA', 'RFMARIA'],
 ];
 
-export const QUESTIONS: Question[] = rawQuestions.map(([id, section, sectionLabel, question, answer]) => ({
+import { extraRawQuestions, extraAvailabilityDisplays } from './questions-extra';
+
+const allAvailabilityDisplays: Record<number, string> = {
+  ...availabilityDisplays,
+  ...extraAvailabilityDisplays,
+};
+
+const allRawQuestions = [...rawQuestions, ...extraRawQuestions];
+
+export const QUESTIONS: Question[] = allRawQuestions.map(([id, section, sectionLabel, question, answer]) => ({
   id,
   section,
   sectionLabel,
   question,
   answer: encode(answer),
-  hasAvailabilityDisplay: id >= 86 && id <= 94,
-  availabilityText: availabilityDisplays[id] || null,
+  hasAvailabilityDisplay: (id >= 86 && id <= 94) || (id >= 186 && id <= 194),
+  availabilityText: allAvailabilityDisplays[id] || null,
 }));
