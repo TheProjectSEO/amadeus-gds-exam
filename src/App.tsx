@@ -79,6 +79,8 @@ interface SavedSession {
   questionIds: number[];
   studentName: string;
   studentSection: string;
+  currentIdx: number;
+  attemptSeed: number; // timestamp used as part of the shuffle seed
 }
 
 function checkAnswer(input: string, encoded: string): boolean {
@@ -662,6 +664,7 @@ export default function App() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [examResult, setExamResult] = useState<{ released: boolean; totalCorrect?: number; totalQuestions?: number; scorePercent?: number } | null>(null);
   const [checkingResults, setCheckingResults] = useState(false);
+  const [attemptSeed, setAttemptSeed] = useState(0);
 
   // Exam state
   const [studentName, setStudentName] = useState('');
@@ -687,10 +690,10 @@ export default function App() {
     return () => clearInterval(checkGIS);
   }, []);
 
-  // Session recovery — save every 30s during exam
+  // Session recovery — save on every answer change and every 30s for timer updates
   useEffect(() => {
     if (!examStarted || !user) return;
-    const interval = setInterval(() => {
+    const saveSession = () => {
       const session: SavedSession = {
         userSub: user.sub,
         answers,
@@ -698,11 +701,15 @@ export default function App() {
         questionIds: questions.map(q => q.id),
         studentName,
         studentSection,
+        currentIdx,
+        attemptSeed,
       };
       localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    }, 30000);
+    };
+    saveSession(); // save immediately on any change
+    const interval = setInterval(saveSession, 30000); // also save timer updates
     return () => clearInterval(interval);
-  }, [examStarted, user, answers, timeLeft, questions, studentName, studentSection]);
+  }, [examStarted, user, answers, timeLeft, questions, studentName, studentSection, currentIdx, attemptSeed]);
 
   // Check for saved session on mount
   useEffect(() => {
@@ -721,7 +728,8 @@ export default function App() {
         setTimeLeft(session.timeLeft);
         setStudentName(session.studentName);
         setStudentSection(session.studentSection);
-        setCurrentIdx(0);
+        setCurrentIdx(session.currentIdx || 0);
+        setAttemptSeed(session.attemptSeed || 0);
         setExamStarted(true);
         setMode('exam');
       } else {
@@ -799,9 +807,11 @@ export default function App() {
   const handleStartExam = useCallback((name: string, section: string) => {
     setStudentName(name);
     setStudentSection(section);
-    // Seeded selection: pick 100 questions from 200, unique per student
+    // Seeded selection: pick 100 questions from 200, unique per attempt
+    const seed = Date.now();
+    setAttemptSeed(seed);
     const examQuestions = user
-      ? seededSelect(QUESTIONS, 100, user.sub)
+      ? seededSelect(QUESTIONS, 100, user.sub + seed)
       : shuffleArray(QUESTIONS).slice(0, 100);
     setQuestions(examQuestions);
     setCurrentIdx(0);

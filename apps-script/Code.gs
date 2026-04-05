@@ -109,7 +109,7 @@ function setupSheet(teacherEmail) {
   if (!sheet1) {
     sheet1 = ss.insertSheet('Sheet1');
   }
-  var headers = ['Student Name', 'Email', 'Section', 'Questions Attempted', 'Total Correct', 'Score %', 'Submission Time', 'Answers JSON'];
+  var headers = ['Student Name', 'Email', 'Section', 'Attempt', 'Questions Attempted', 'Total Correct', 'Score %', 'Submission Time', 'Answers JSON'];
   sheet1.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet1.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   sheet1.setFrozenRows(1);
@@ -179,12 +179,14 @@ function handleSubmitExam(data) {
   var user = verifyToken(data.idToken);
   if (!user) return { success: false, error: 'Invalid token' };
 
-  // Check for duplicate submission
   var sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Sheet1');
-  var emails = sheet.getRange(2, 2, Math.max(sheet.getLastRow() - 1, 1), 1).getValues();
-  for (var i = 0; i < emails.length; i++) {
-    if (emails[i][0] === user.email) {
-      return { success: false, error: 'Already submitted', alreadySubmitted: true };
+
+  // Count previous attempts by this email
+  var attemptNum = 1;
+  if (sheet.getLastRow() > 1) {
+    var emails = sheet.getRange(2, 2, sheet.getLastRow() - 1, 1).getValues();
+    for (var i = 0; i < emails.length; i++) {
+      if (emails[i][0] === user.email) attemptNum++;
     }
   }
 
@@ -213,6 +215,7 @@ function handleSubmitExam(data) {
     data.studentName || user.name,
     user.email,
     data.studentSection || '',
+    attemptNum,
     questionsAttempted,
     totalCorrect,
     Math.round(scorePercent * 10) / 10,
@@ -253,18 +256,22 @@ function handleCheckResults(params) {
     return { released: false };
   }
 
-  // Find student's row
+  // Find student's latest row
   var sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Sheet1');
   var data = sheet.getDataRange().getValues();
+  var latestRow = null;
   for (var i = 1; i < data.length; i++) {
     if (data[i][1] === user.email) {
-      return {
-        released: true,
-        totalCorrect: data[i][4],
-        totalQuestions: 100,
-        scorePercent: data[i][5]
-      };
+      latestRow = data[i]; // keep overwriting — last row is latest attempt
     }
+  }
+  if (latestRow) {
+    return {
+      released: true,
+      totalCorrect: latestRow[5],
+      totalQuestions: 100,
+      scorePercent: latestRow[6]
+    };
   }
 
   return { released: true, error: 'No submission found' };
@@ -302,10 +309,11 @@ function handleGetSubmissions(params) {
         studentName: data[i][0],
         email: data[i][1],
         section: data[i][2],
-        questionsAttempted: data[i][3],
-        totalCorrect: data[i][4],
-        scorePercent: data[i][5],
-        submissionTime: data[i][6]
+        attempt: data[i][3],
+        questionsAttempted: data[i][4],
+        totalCorrect: data[i][5],
+        scorePercent: data[i][6],
+        submissionTime: data[i][7]
       });
     }
   }
