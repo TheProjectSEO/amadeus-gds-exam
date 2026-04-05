@@ -97,6 +97,42 @@ var ANSWER_KEY = {
   199: 'RFCARLOS', 200: 'RFANNA'
 };
 
+// ─── Setup (run once) ───────────────────────────────────────────────
+// Call this once to initialize the Sheet structure and Config tab.
+// Can be triggered via: ?action=setup&teacherEmail=your@gmail.com
+
+function setupSheet(teacherEmail) {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+
+  // Setup Sheet1 headers
+  var sheet1 = ss.getSheetByName('Sheet1');
+  if (!sheet1) {
+    sheet1 = ss.insertSheet('Sheet1');
+  }
+  var headers = ['Student Name', 'Email', 'Section', 'Questions Attempted', 'Total Correct', 'Score %', 'Submission Time', 'Answers JSON'];
+  sheet1.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet1.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+  sheet1.setFrozenRows(1);
+
+  // Auto-resize columns
+  for (var i = 1; i <= headers.length; i++) {
+    sheet1.autoResizeColumn(i);
+  }
+
+  // Setup Config tab
+  var config = ss.getSheetByName('Config');
+  if (!config) {
+    config = ss.insertSheet('Config');
+  }
+  config.getRange('A1').setValue('resultsReleased');
+  config.getRange('B1').setValue('FALSE');
+  config.getRange('A2').setValue('teacherEmails');
+  config.getRange('B2').setValue(teacherEmail || 'teacher@gmail.com');
+  config.getRange('A1:A2').setFontWeight('bold');
+
+  return { success: true, message: 'Sheet initialized with headers and Config tab' };
+}
+
 // ─── Entry Points ───────────────────────────────────────────────────
 
 function doPost(e) {
@@ -120,7 +156,9 @@ function doGet(e) {
   try {
     var action = e.parameter.action;
 
-    if (action === 'checkResults') {
+    if (action === 'setup') {
+      return jsonResponse(setupSheet(e.parameter.teacherEmail));
+    } else if (action === 'checkResults') {
       return jsonResponse(handleCheckResults(e.parameter));
     } else if (action === 'getSubmissions') {
       return jsonResponse(handleGetSubmissions(e.parameter));
