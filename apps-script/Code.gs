@@ -140,7 +140,9 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
     var action = data.action;
 
-    if (action === 'submitExam') {
+    if (action === 'setup') {
+      return jsonResponse(setupSheet(data.teacherEmail));
+    } else if (action === 'submitExam') {
       return jsonResponse(handleSubmitExam(data));
     } else if (action === 'releaseResults') {
       return jsonResponse(handleReleaseResults(data));

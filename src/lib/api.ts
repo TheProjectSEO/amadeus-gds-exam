@@ -4,7 +4,7 @@
 // ─── Config ─────────────────────────────────────────────────────────
 // Replace these values after setting up Google Cloud + Apps Script
 export const GOOGLE_CLIENT_ID = '872142500142-f5d6hde4m428avdnq637kcas989qa2g5.apps.googleusercontent.com';
-export const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbycNhh-crQKJM_iQQ33MEBCLDTQW70Da-qiSin4TxDIllkpBKLlrGEF4WbKRo2M0smfSg/exec';
+export const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwM5NK_0tOzSKQqJmnHhrEmd9OKmCURzRNx7HfCVC3lgdpNp1p1H59a7MH3KJqPm0/exec';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
