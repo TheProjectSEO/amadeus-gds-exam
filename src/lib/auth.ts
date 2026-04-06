@@ -23,6 +23,7 @@ declare global {
             element: HTMLElement,
             config: { theme?: string; size?: string; width?: number; text?: string }
           ) => void;
+          prompt: () => void;
           revoke: (email: string, callback: () => void) => void;
         };
       };
@@ -71,6 +72,10 @@ export function renderGoogleButton(element: HTMLElement): void {
     width: 300,
     text: 'signin_with',
   });
+}
+
+export function promptSignIn(): void {
+  window.google?.accounts.id.prompt();
 }
 
 export function signOut(email: string): void {

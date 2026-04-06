@@ -5,7 +5,7 @@ import {
   Eye, EyeOff, LogOut
 } from 'lucide-react';
 import { QUESTIONS, SECTIONS, decodeAnswer, type Question, type Section } from './data/questions';
-import { initGoogleSignIn, signOut as googleSignOut, type GoogleUser } from './lib/auth';
+import { initGoogleSignIn, signOut as googleSignOut, promptSignIn, type GoogleUser } from './lib/auth';
 import { GOOGLE_CLIENT_ID, submitExam as apiSubmitExam, checkResults as apiCheckResults } from './lib/api';
 import { LoginScreen } from './components/LoginScreen';
 import { TeacherDashboard } from './components/TeacherDashboard';
@@ -112,8 +112,29 @@ function getSectionIcon(sectionId: string) {
 // ─── Landing Page ────────────────────────────────────────────────────
 
 function LandingPage({ onSelectMode, user, onSignOut }: { onSelectMode: (mode: AppMode) => void; user: GoogleUser | null; onSignOut: () => void }) {
+  const hasSavedSession = !!localStorage.getItem(SESSION_KEY);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
+      {/* Saved session banner */}
+      {hasSavedSession && !user && (
+        <div className="mb-6 w-full max-w-2xl px-2 sm:px-0">
+          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <span className="text-sm font-medium text-amber-300">You have an unfinished exam</span>
+            </div>
+            <p className="text-xs text-amber-300/70">Sign in with Google to resume where you left off.</p>
+            <button
+              onClick={() => onSelectMode('login')}
+              className="cursor-pointer mt-3 px-5 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-medium transition-colors"
+            >
+              Sign in to Resume
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center mb-12">
         <div className="flex items-center justify-center gap-3 mb-4">
@@ -859,6 +880,11 @@ export default function App() {
         if (result.alreadySubmitted) {
           setSubmitError('You have already submitted this exam.');
           setMode('submitted');
+        } else if (!result.success && result.error === 'Invalid token') {
+          // Token expired — trigger re-auth and show retry message
+          promptSignIn();
+          setSubmitError('Your session expired. Please sign in again using the popup, then tap "Retry Submit" below.');
+          setMode('submitted');
         } else if (!result.success) {
           setSubmitError(result.error || 'Submission failed. Please contact your teacher.');
           setMode('submitted');
@@ -869,7 +895,7 @@ export default function App() {
         }
       } catch {
         // Keep session in localStorage so student can retry
-        setSubmitError('Network error. Your answers have been saved locally. Please contact your teacher.');
+        setSubmitError('Network error. Your answers have been saved locally. Tap "Retry Submit" to try again.');
         setMode('submitted');
       } finally {
         setSubmitting(false);
@@ -960,10 +986,18 @@ export default function App() {
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Exam Submitted!</h2>
           {submitError ? (
-            <p className="text-red-400 text-sm mb-6">{submitError}</p>
+            <div className="mb-6">
+              <p className="text-red-400 text-sm mb-3">{submitError}</p>
+              <button
+                onClick={() => handleSubmitExam()}
+                className="cursor-pointer px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors"
+              >
+                Retry Submit
+              </button>
+            </div>
           ) : (
             <p className="text-slate-400 text-sm mb-6">
-              Your answers have been recorded. Results will be available when released by your teacher.
+              Your answers have been recorded.
             </p>
           )}
 
