@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amadeus GDS Exam Report — BSTM 22C</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:#0f172a; color:#e2e8f0; min-height:100vh; }
+  .lock-screen { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+  .lock-card { background:#1e293b; border:1px solid #334155; border-radius:20px; padding:40px; text-align:center; max-width:380px; width:100%; }
+  .lock-card h2 { font-size:22px; font-weight:700; color:#f1f5f9; margin-bottom:8px; }
+  .lock-card p { font-size:14px; color:#64748b; margin-bottom:24px; }
+  .lock-card input { width:100%; padding:14px 16px; background:#0f172a; border:1px solid #334155; border-radius:12px; color:#f1f5f9; font-size:16px; text-align:center; letter-spacing:4px; font-weight:600; outline:none; }
+  .lock-card input:focus { border-color:#3b82f6; }
+  .lock-card button { width:100%; margin-top:16px; padding:14px; background:#3b82f6; border:none; border-radius:12px; color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
+  .lock-card button:hover { background:#2563eb; }
+  .lock-card .error { color:#ef4444; font-size:13px; margin-top:12px; display:none; }
+  .container { max-width:1000px; margin:0 auto; padding:40px 24px; }
+  .header { text-align:center; margin-bottom:48px; }
+  .header h1 { font-size:32px; font-weight:800; color:#f8fafc; margin-bottom:4px; }
+  .header h2 { font-size:18px; font-weight:500; color:#60a5fa; margin-bottom:4px; }
+  .header p { font-size:14px; color:#64748b; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:40px; }
+  .stat { background:#1e293b; border:1px solid #334155; border-radius:16px; padding:24px; text-align:center; }
+  .stat .value { font-size:36px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .stat .label { font-size:13px; color:#64748b; margin-top:4px; font-weight:500; }
+  .card { background:#1e293b; border:1px solid #334155; border-radius:16px; padding:28px; margin-bottom:24px; }
+  .card h3 { font-size:18px; font-weight:700; color:#f1f5f9; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; padding:10px 12px; font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #334155; font-weight:600; }
+  td { padding:12px; border-bottom:1px solid #1e293b; font-size:14px; }
+  tr:hover td { background:#1e293b80; }
+  .insights { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-bottom:40px; }
+  .insight { background:#1e293b; border:1px solid #334155; border-radius:16px; padding:24px; }
+  .insight .icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; font-size:20px; }
+  .insight .title { font-size:14px; color:#94a3b8; margin-bottom:4px; }
+  .insight .value { font-size:24px; font-weight:700; }
+  .footer { text-align:center; padding:40px 0 20px; color:#475569; font-size:12px; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; }
+  .top-badge { background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#0f172a; padding:3px 12px; border-radius:12px; font-size:11px; font-weight:700; }
+  @media print {
+    body { background:#fff; color:#1e293b; }
+    .stat, .card, .insight { border-color:#e2e8f0; background:#f8fafc; }
+    .stat .value, .card h3, .insight .value { color:#0f172a; }
+  }
+</style>
+</head>
+<body>
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-card">
+    <div style="font-size:36px;margin-bottom:16px">&#128274;</div>
+    <h2>Exam Report</h2>
+    <p>Enter the access code to view results</p>
+    <input type="password" id="passInput" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" maxlength="20" autofocus>
+    <button onclick="checkPass()">Unlock</button>
+    <div class="error" id="passError">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<div class="container" id="reportContent" style="display:none">
+
+  <div class="header">
+    <div style="display:inline-flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="width:48px;height:48px;background:#3b82f620;border:1px solid #3b82f640;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px">&#9992;</div>
+    </div>
+    <h1>Amadeus GDS Practical Examination</h1>
+    <h2>Results Report — BSTM 22C</h2>
+    <p>PDM College | April 6, 2026 | ABT Tech Final Exam</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="value" style="color:#f8fafc">33</div>
+      <div class="label">Total Students</div>
+    </div>
+    <div class="stat">
+      <div class="value" style="color:#22c55e">82.8%</div>
+      <div class="label">Average Score</div>
+    </div>
+    <div class="stat">
+      <div class="value" style="color:#3b82f6">26/33</div>
+      <div class="label">Pass Rate (75+)</div>
+    </div>
+    <div class="stat">
+      <div class="value" style="color:#fbbf24">2</div>
+      <div class="label">Perfect Scores</div>
+    </div>
+  </div>
+
+  <div class="insights">
+    <div class="insight">
+      <div class="icon" style="background:#22c55e20;color:#22c55e">&#9733;</div>
+      <div class="title">Excellent Performers (90+)</div>
+      <div class="value" style="color:#22c55e">13 students <span style="font-size:14px;color:#64748b">(39%)</span></div>
+    </div>
+    <div class="insight">
+      <div class="icon" style="background:#3b82f620;color:#3b82f6">&#9650;</div>
+      <div class="title">Highest / Lowest Score</div>
+      <div class="value" style="color:#3b82f6">100 <span style="font-size:14px;color:#64748b">/</span> 36</div>
+    </div>
+    <div class="insight">
+      <div class="icon" style="background:#f59e0b20;color:#f59e0b">&#9888;</div>
+      <div class="title">Need Remediation (&lt;50)</div>
+      <div class="value" style="color:#ef4444">3 students <span style="font-size:14px;color:#64748b">(9%)</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Score Distribution</h3>
+    
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="width:80px;text-align:right;font-size:13px;color:#94a3b8;font-weight:500">90-100</div>
+      <div style="flex:1;height:28px;background:#1e293b;border-radius:6px;overflow:hidden;position:relative">
+        <div style="width:100.0%;height:100%;background:#22c55e;border-radius:6px;transition:width 0.5s"></div>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:#cbd5e1;font-weight:600">13 (39%)</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="width:80px;text-align:right;font-size:13px;color:#94a3b8;font-weight:500">80-89</div>
+      <div style="flex:1;height:28px;background:#1e293b;border-radius:6px;overflow:hidden;position:relative">
+        <div style="width:84.61538461538461%;height:100%;background:#3b82f6;border-radius:6px;transition:width 0.5s"></div>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:#cbd5e1;font-weight:600">11 (33%)</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="width:80px;text-align:right;font-size:13px;color:#94a3b8;font-weight:500">70-79</div>
+      <div style="flex:1;height:28px;background:#1e293b;border-radius:6px;overflow:hidden;position:relative">
+        <div style="width:30.76923076923077%;height:100%;background:#f59e0b;border-radius:6px;transition:width 0.5s"></div>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:#cbd5e1;font-weight:600">4 (12%)</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="width:80px;text-align:right;font-size:13px;color:#94a3b8;font-weight:500">60-69</div>
+      <div style="flex:1;height:28px;background:#1e293b;border-radius:6px;overflow:hidden;position:relative">
+        <div style="width:7.6923076923076925%;height:100%;background:#f97316;border-radius:6px;transition:width 0.5s"></div>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:#cbd5e1;font-weight:600">1 (3%)</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="width:80px;text-align:right;font-size:13px;color:#94a3b8;font-weight:500">50-59</div>
+      <div style="flex:1;height:28px;background:#1e293b;border-radius:6px;overflow:hidden;position:relative">
+        <div style="width:7.6923076923076925%;height:100%;background:#ef4444;border-radius:6px;transition:width 0.5s"></div>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:#cbd5e1;font-weight:600">1 (3%)</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="width:80px;text-align:right;font-size:13px;color:#94a3b8;font-weight:500">Below 50</div>
+      <div style="flex:1;height:28px;background:#1e293b;border-radius:6px;overflow:hidden;position:relative">
+        <div style="width:23.076923076923077%;height:100%;background:#dc2626;border-radius:6px;transition:width 0.5s"></div>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:#cbd5e1;font-weight:600">3 (9%)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Top 10 Performers</h3>
+    <table>
+      <tr>
+        <th style="width:50px;text-align:center">#</th>
+        <th>Student</th>
+        <th style="text-align:center">Section</th>
+        <th style="width:200px">Score</th>
+        <th style="width:60px;text-align:center">Grade</th>
+      </tr>
+      
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">1</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Aaron Canlas</div>
+        <div style="font-size:11px;color:#64748b">aaronchristiancanlas1@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:100%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">100</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">2</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">GONO, DANIELA ERIKA V.</div>
+        <div style="font-size:11px;color:#64748b">danielaerikagono@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:100%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">100</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">3</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">TABUCAO, SHERY-ANN</div>
+        <div style="font-size:11px;color:#64748b">tabucaosheryann13@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:99%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">99</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">4</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">PAMA, ASHLEY DENISE C.</div>
+        <div style="font-size:11px;color:#64748b">pamaashleydenise.pdm@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:98%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">98</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">5</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">CONSTANTINO,CHERRY ANN S.</div>
+        <div style="font-size:11px;color:#64748b">constantinocherryann8@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22-C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:98%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">98</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">6</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">CONSULTA,ELIZA NICOLE L.</div>
+        <div style="font-size:11px;color:#64748b">consultaelizanicole.pdm@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:98%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">98</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">7</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">ShailaMae Taduran</div>
+        <div style="font-size:11px;color:#64748b">shailamaetaduran8@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:97%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">97</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">8</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Julie Ann Canete</div>
+        <div style="font-size:11px;color:#64748b">canetejulieann.pdm@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:95%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">95</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">9</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">SALUDO, JENILYN</div>
+        <div style="font-size:11px;color:#64748b">jenilynsaludo9@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:94%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">94</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">10</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Garcia, Yhukarie Mhae DJ.</div>
+        <div style="font-size:11px;color:#64748b">yhukariemhaed@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM - 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:93%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">93</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>All Student Results (Ranked by Score)</h3>
+    <table>
+      <tr>
+        <th style="width:50px;text-align:center">#</th>
+        <th>Student</th>
+        <th style="text-align:center">Section</th>
+        <th style="width:200px">Score</th>
+        <th style="width:60px;text-align:center">Grade</th>
+      </tr>
+      
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">1</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Aaron Canlas</div>
+        <div style="font-size:11px;color:#64748b">aaronchristiancanlas1@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:100%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">100</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">2</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">GONO, DANIELA ERIKA V.</div>
+        <div style="font-size:11px;color:#64748b">danielaerikagono@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:100%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">100</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">3</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">TABUCAO, SHERY-ANN</div>
+        <div style="font-size:11px;color:#64748b">tabucaosheryann13@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:99%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">99</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">4</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">PAMA, ASHLEY DENISE C.</div>
+        <div style="font-size:11px;color:#64748b">pamaashleydenise.pdm@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:98%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">98</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">5</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">CONSTANTINO,CHERRY ANN S.</div>
+        <div style="font-size:11px;color:#64748b">constantinocherryann8@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22-C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:98%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">98</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">6</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">CONSULTA,ELIZA NICOLE L.</div>
+        <div style="font-size:11px;color:#64748b">consultaelizanicole.pdm@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:98%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">98</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">7</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">ShailaMae Taduran</div>
+        <div style="font-size:11px;color:#64748b">shailamaetaduran8@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:97%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">97</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">8</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Julie Ann Canete</div>
+        <div style="font-size:11px;color:#64748b">canetejulieann.pdm@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:95%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">95</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">9</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">SALUDO, JENILYN</div>
+        <div style="font-size:11px;color:#64748b">jenilynsaludo9@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:94%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">94</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">10</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Garcia, Yhukarie Mhae DJ.</div>
+        <div style="font-size:11px;color:#64748b">yhukariemhaed@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM - 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:93%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">93</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">11</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Ross Jehu Adbalagao</div>
+        <div style="font-size:11px;color:#64748b">adbalagao.rossjehu@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:92%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">92</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">12</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">DAGANIO JASMINE SACY</div>
+        <div style="font-size:11px;color:#64748b">daganiosacyg.pdm@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:92%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">92</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">13</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">CASTILLO, ROCHEL ANN G.</div>
+        <div style="font-size:11px;color:#64748b">rochelanngiango09@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22-C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:90%;height:100%;background:#22c55e;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">90</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#22c55e20;color:#22c55e;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">A</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">14</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Esteron, Myka</div>
+        <div style="font-size:11px;color:#64748b">esteronmyka.pdm@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:89%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">89</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">15</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Legaspi, Aaron Josh</div>
+        <div style="font-size:11px;color:#64748b">kalbo142004@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:89%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">89</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">16</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Ryan Meneses</div>
+        <div style="font-size:11px;color:#64748b">ryanmeneses182@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:88%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">88</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">17</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Jennelyn Casipong</div>
+        <div style="font-size:11px;color:#64748b">casipongjennelyn65@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:87%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">87</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">18</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Evann Wayne Marcelino</div>
+        <div style="font-size:11px;color:#64748b">evannmarcelino17@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-TM 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:86%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">86</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">19</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Rellores Angela C.</div>
+        <div style="font-size:11px;color:#64748b">angelacyrellores@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:84%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">84</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">20</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Eulyrick Domantay</div>
+        <div style="font-size:11px;color:#64748b">eulyd20@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:84%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">84</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">21</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">LAGAMAYO, ANDREA P.</div>
+        <div style="font-size:11px;color:#64748b">andrealagamayo@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:84%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">84</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">22</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">John Eurie Revilla</div>
+        <div style="font-size:11px;color:#64748b">johneurie103006@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:83%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">83</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">23</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">PATIGAS ALAIZA JANE DC.</div>
+        <div style="font-size:11px;color:#64748b">ajpatigas17@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:81%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">81</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">24</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">ICAWAT, JOHN MICHAEL F.</div>
+        <div style="font-size:11px;color:#64748b">icawatjohnmichael17@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:81%;height:100%;background:#3b82f6;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">81</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#3b82f620;color:#3b82f6;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">B</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">25</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">JANNALAINE ROBREDILLO</div>
+        <div style="font-size:11px;color:#64748b">carlorobredillo7@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:78%;height:100%;background:#f59e0b;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">78</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#f59e0b20;color:#f59e0b;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">C</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">26</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">LLAMOSA RAVEN S.</div>
+        <div style="font-size:11px;color:#64748b">ravenllamosa912@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:76%;height:100%;background:#f59e0b;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">76</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#f59e0b20;color:#f59e0b;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">C</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">27</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">John carlos Galura (J.C.G)</div>
+        <div style="font-size:11px;color:#64748b">jcgalura6@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:74%;height:100%;background:#f59e0b;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">74</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#f59e0b20;color:#f59e0b;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">C</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">28</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Shutaka Baliw</div>
+        <div style="font-size:11px;color:#64748b">shutakabaliw@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-22C/2024-003959</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:74%;height:100%;background:#f59e0b;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">74</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#f59e0b20;color:#f59e0b;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">C</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">29</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Briones, Raphael Andrei C.</div>
+        <div style="font-size:11px;color:#64748b">raphaelandreibriones@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:69%;height:100%;background:#f97316;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">69</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#f9731620;color:#f97316;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">D</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">30</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Clark Arthenian Balasbas</div>
+        <div style="font-size:11px;color:#64748b">clarkarthenian@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM 22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:58%;height:100%;background:#ef4444;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">58</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#ef444420;color:#ef4444;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">F</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">31</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">KYLA JAMILLA R. SALES</div>
+        <div style="font-size:11px;color:#64748b">kylajamillasales15@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM-TM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:45%;height:100%;background:#ef4444;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">45</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#ef444420;color:#ef4444;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">F</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">32</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">CALINGACION EDLYN CHARIZ</div>
+        <div style="font-size:11px;color:#64748b">edlyncharizc@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BS BA TM 2C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:39%;height:100%;background:#ef4444;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">39</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#ef444420;color:#ef4444;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">F</span></td>
+    </tr>
+    <tr>
+      <td style="text-align:center;font-weight:600;color:#94a3b8">33</td>
+      <td>
+        <div style="font-weight:500;color:#e2e8f0">Jayr Moneda</div>
+        <div style="font-size:11px;color:#64748b">jayrmoneda6@gmail.com</div>
+      </td>
+      <td style="text-align:center;color:#94a3b8;font-size:13px">BSTM22C</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
+            <div style="width:36%;height:100%;background:#ef4444;border-radius:4px"></div>
+          </div>
+          <span style="font-weight:700;color:#f1f5f9;font-variant-numeric:tabular-nums;min-width:32px">36</span>
+        </div>
+      </td>
+      <td style="text-align:center"><span style="background:#ef444420;color:#ef4444;padding:2px 10px;border-radius:12px;font-weight:600;font-size:13px">F</span></td>
+    </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Platform &amp; Methodology</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:8px">
+      <div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:4px">Question Pool</div>
+        <div style="color:#e2e8f0;font-weight:500">200 questions, 100 per student (randomized)</div>
+      </div>
+      <div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:4px">Anti-Cheat</div>
+        <div style="color:#e2e8f0;font-weight:500">Unique question sets per student, paste blocking, tab detection</div>
+      </div>
+      <div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:4px">Authentication</div>
+        <div style="color:#e2e8f0;font-weight:500">Google OAuth — verified student identity</div>
+      </div>
+      <div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:4px">Grading</div>
+        <div style="color:#e2e8f0;font-weight:500">Server-side auto-grading with answer key verification</div>
+      </div>
+      <div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:4px">Record Keeping</div>
+        <div style="color:#e2e8f0;font-weight:500">Google Sheets + individual Drive docs per student</div>
+      </div>
+      <div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:4px">Mobile Support</div>
+        <div style="color:#e2e8f0;font-weight:500">Responsive design, session recovery, crash-safe</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p style="font-weight:500;color:#94a3b8;font-size:13px">Report generated by Elena Ignacio, Instructor</p>
+    <p style="margin-top:4px">Amadeus GDS Exam Platform | PDM College</p>
+  </div>
+
+</div>
+<script>
+function checkPass(){
+  var p=document.getElementById('passInput').value;
+  if(p==='report'){
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('reportContent').style.display='block';
+  }else{
+    document.getElementById('passError').style.display='block';
+    document.getElementById('passInput').value='';
+    document.getElementById('passInput').focus();
+  }
+}
+document.getElementById('passInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPass();});
+</script>
+</body>
+</html>
