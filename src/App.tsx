@@ -877,10 +877,7 @@ export default function App() {
           questionsAttempted: Object.values(answers).filter(a => a.trim()).length,
           timeTakenSeconds: 120 * 60 - timeLeft,
         });
-        if (result.alreadySubmitted) {
-          setSubmitError('You have already submitted this exam.');
-          setMode('submitted');
-        } else if (!result.success && result.error === 'Invalid token') {
+        if (!result.success && result.error === 'Invalid token') {
           // Token expired — trigger re-auth and show retry message
           promptSignIn();
           setSubmitError('Your session expired. Please sign in again using the popup, then tap "Retry Submit" below.');

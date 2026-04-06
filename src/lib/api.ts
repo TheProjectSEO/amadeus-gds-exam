@@ -22,7 +22,6 @@ export interface SubmitExamPayload {
 export interface SubmitExamResponse {
   success: boolean;
   error?: string;
-  alreadySubmitted?: boolean;
 }
 
 export interface CheckResultsResponse {
