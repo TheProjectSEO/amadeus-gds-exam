@@ -160,10 +160,18 @@ function LandingPage({ onSelectMode, user, onSignOut }: { onSelectMode: (mode: A
       {/* User status + Instructions */}
       <div className="mt-10 max-w-xl text-center space-y-3">
         {user && (
-          <div className="flex items-center justify-center gap-3 text-sm">
-            <span className="text-slate-400">Signed in as <span className="text-white">{user.email}</span></span>
-            <button onClick={onSignOut} className="cursor-pointer text-slate-500 hover:text-white transition-colors">
-              <LogOut className="w-4 h-4" />
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center justify-center gap-3 text-sm">
+              <span className="text-slate-400">Signed in as <span className="text-white">{user.email}</span></span>
+              <button onClick={onSignOut} className="cursor-pointer text-slate-500 hover:text-white transition-colors">
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+            <button
+              onClick={() => onSelectMode('teacher')}
+              className="cursor-pointer text-xs text-slate-600 hover:text-slate-400 transition-colors"
+            >
+              Teacher Dashboard
             </button>
           </div>
         )}
@@ -674,6 +682,7 @@ export default function App() {
   const [tabSwitches, setTabSwitches] = useState(0);
   const [showTabWarning, setShowTabWarning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const submitRef = useRef<() => void>(() => {});
 
   // Initialize Google Sign-In
   useEffect(() => {
@@ -782,7 +791,7 @@ export default function App() {
       setTimeLeft(prev => {
         if (prev <= 1) {
           if (timerRef.current) clearInterval(timerRef.current);
-          handleSubmitExam();
+          submitRef.current();
           return 0;
         }
         return prev - 1;
@@ -832,9 +841,6 @@ export default function App() {
     setExamStarted(false);
     try { document.exitFullscreen?.(); } catch { /* ok */ }
 
-    // Clear saved session
-    localStorage.removeItem(SESSION_KEY);
-
     // If user is logged in, submit to Apps Script
     if (user) {
       setSubmitting(true);
@@ -857,20 +863,25 @@ export default function App() {
           setSubmitError(result.error || 'Submission failed. Please contact your teacher.');
           setMode('submitted');
         } else {
-          // Show results immediately after successful submission
+          // Only clear session after confirmed success
+          localStorage.removeItem(SESSION_KEY);
           setMode('results');
         }
       } catch {
+        // Keep session in localStorage so student can retry
         setSubmitError('Network error. Your answers have been saved locally. Please contact your teacher.');
         setMode('submitted');
       } finally {
         setSubmitting(false);
       }
     } else {
-      // Fallback: show results directly (no backend configured)
+      localStorage.removeItem(SESSION_KEY);
       setMode('results');
     }
   }, [user, studentName, studentSection, answers, questions, timeLeft]);
+
+  // Keep ref in sync so timer closure always calls latest version
+  submitRef.current = handleSubmitExam;
 
   const handleConfirmSubmit = useCallback(() => {
     const unanswered = questions.filter(q => !answers[q.id]?.trim()).length;

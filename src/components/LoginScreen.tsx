@@ -47,7 +47,7 @@ export function LoginScreen({ onBack }: LoginScreenProps) {
             <ul className="list-disc list-inside space-y-1 text-slate-500">
               <li>Your name and email being recorded for grading</li>
               <li>Your answers being saved to the teacher's records</li>
-              <li>One submission per email address</li>
+              <li>Each attempt is recorded separately</li>
             </ul>
           </div>
         </div>
